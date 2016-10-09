@@ -74,6 +74,18 @@ bool parse_help(std::string const& src)
 	return src == "help" || src == "usage";
 }
 
+void clear(std::vector<std::pair<Math::e_param, Math::function*>> &v,
+		Math::e_param param)
+{
+	for(auto it = std::begin(v); it != std::end(v);) {
+		if(it -> first == param) {
+			v.erase(it);
+		} else {
+			it++;
+		}
+	}
+}
+
 void clear(std::vector<std::pair<Math::e_param, Math::function*>> &v)
 {
 	for(auto it = std::begin(v); it != std::end(v);) {
@@ -115,14 +127,7 @@ int main(int argc, const char *argv[])
 				delete var;
 			}
 		} else if(parse_unbind(line, param)) {
-			for(auto it = std::begin(bindings); it != std::end(bindings);) {
-				if(it -> first == param) {
-					delete it -> second;
-					bindings.erase(it);
-				} else {
-					it++;
-				}
-			}
+			clear(bindings, param);
 		} else if(parse_bind(line, param, binding)) {
 			bindings.emplace_back(param, binding);
 		} else if(auto parsed = parse_function(line)) {
@@ -138,7 +143,6 @@ int main(int argc, const char *argv[])
 			print_derivatives(*reduced, std::cout);
 			delete reduced;
 		} else {
-			std::cout << "Expression parsing failed.\n";
 			usage();
 		}
 		std::cout << "# ";
