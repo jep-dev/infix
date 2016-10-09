@@ -2,6 +2,9 @@ bin/*
 test/bin/*
 lib/*
 test/lib/*
+*.swp
+*/*.swp
+*/*/*.swp
 # Compiled Object files
 *.slo
 *.lo
