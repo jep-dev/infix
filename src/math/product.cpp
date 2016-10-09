@@ -212,7 +212,7 @@ namespace Math {
 			delete output;
 			return reduced;
 		}
-		if(*r < *l) {
+		if(*l < *r) {
 			return new product(l,r);
 		} else {
 			return new product(r,l);
