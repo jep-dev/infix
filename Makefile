@@ -1,3 +1,4 @@
+MKDIR:=@mkdir -p
 CXXFLAGS:=$(CXXFLAGS) -std=c++11 -Iinclude
 LDFLAGS:=
 
@@ -6,6 +7,8 @@ LIBDIR:=lib/
 INCDIR:=include/
 SRCDIR:=src/
 TESTDIR:=test/
+SENTINEL_DIRS:=$(BINDIR) $(LIBDIR) $(LIBDIR)math/\
+	$(TESTDIR)$(BINDIR) $(TESTDIR)$(LIBDIR) $(TESTDIR)$(LIBDIR)math/
 
 OBJ_EXT:=.o
 EXE_EXT:=
@@ -31,12 +34,16 @@ TEST_DEPS:=$(filter-out $(LIBDIR)main$(OBJ_EXT),$(OBJECTS))
 TEST_EXES:=$(foreach obj,$(TEST_APPLICATIONS),\
 		$(obj:%=$(TESTDIR)$(BINDIR)%$(EXE_EXT)))
 
-default:$(OBJECTS) $(EXES)
+default:.sentinel $(OBJECTS) $(EXES)
 test:default $(TEST_OBJECTS) $(TEST_EXES)
 all:default test
 
 vpath %.cpp $(SRCDIR)
 vpath %.hpp $(INCDIR)
+
+.sentinel:
+	$(MKDIR) $(SENTINEL_DIRS)
+	@touch .sentinel
 
 $(LIBDIR)%$(OBJ_EXT):%.cpp %.hpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<

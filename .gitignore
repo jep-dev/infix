@@ -2,9 +2,11 @@ bin/*
 test/bin/*
 lib/*
 test/lib/*
+.sentinel
 *.swp
 */*.swp
 */*/*.swp
+
 # Compiled Object files
 *.slo
 *.lo
