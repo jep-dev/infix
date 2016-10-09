@@ -33,7 +33,7 @@ bool parse_unbind(std::string const& src, Math::e_param &param)
 	std::istringstream iss(src);
 	std::string w0, w1;
 	iss >> w0 >> w1;
-	if(w0 != "unset" && w0 != "unbind")
+	if(w0 != "clear" && w0 != "unset" && w0 != "unbind")
 		return false;
 	char sym;
 	if(!parse_symbol(w1, sym))
@@ -43,50 +43,105 @@ bool parse_unbind(std::string const& src, Math::e_param &param)
 	return true;
 }
 
+bool parse_print(std::string const& src)
+{
+	return src == "set" || src == "let" || src == "print";
+}
+
+bool parse_clear(std::string const& src)
+{
+	std::istringstream iss(src);
+	if(src == "clear" || src == "unset" || src == "unbind") {
+		return true;
+	}
+	std::string w0, w1;
+	iss >> w0;
+	if(w0 == "clear" || w0 == "unset" || w0 == "unbind") {
+		iss >> w1;
+		if(w1 == "all")
+			return true;
+	}
+	return false;
+}
+
+bool parse_quit(std::string const& src)
+{
+	return src == "quit" || src == "exit";
+}
+
+bool parse_help(std::string const& src)
+{
+	return src == "" || src == "help" || src == "usage";
+}
+
+void clear(std::vector<std::pair<Math::e_param, Math::function*>> &v)
+{
+	for(auto it = std::begin(v); it != std::end(v);) {
+		delete it -> second;
+		v.erase(it);
+	}
+}
+
+void usage(void)
+{
+	std::cout << "Usage:\n"
+		"  {quit|exit}\n"
+		"  {|help|usage}\n"
+		"  {let|set|print}\n"
+		"  {clear|unset} {|all|r|s|t|u|v|w}\n"
+		"  {let|set} {r|s|t|u|v|w} = <expression(r,s,t,u,v,w,e,pi)>\n"
+		"  <expression(r,s,t,u,v,w,e,pi)>\n";
+}
+
 int main(int argc, const char *argv[])
 {
 	using namespace Math;
 	std::string line;
 	std::vector<std::pair<e_param, function*>> bindings;
+	std::cout << "# ";
 	while(std::getline(std::cin, line)) {
-		if(line == "")
+		e_param param;
+		function *binding;
+		if(parse_help(line)) {
+			usage();
+		} else if(parse_quit(line)) {
 			break;
-		if(auto parsed = parse_function(line)) {
+		} else if(parse_clear(line)) {
+			clear(bindings);
+		} else if(parse_print(line)) {
+			for(auto it : bindings) {
+				auto var = new variable(it.first);
+				std::cout << *var << " = " << *it.second << '\n';
+				delete var;
+			}
+		} else if(parse_unbind(line, param)) {
+			for(auto it = std::begin(bindings); it != std::end(bindings);) {
+				if(it -> first == param) {
+					delete it -> second;
+					bindings.erase(it);
+				} else {
+					it++;
+				}
+			}
+		} else if(parse_bind(line, param, binding)) {
+			bindings.emplace_back(param, binding);
+		} else if(auto parsed = parse_function(line)) {
+			for(auto binding : bindings) {
+				auto bound = parsed ->
+					substitute(binding.first, binding.second);
+				delete parsed;
+				parsed = bound;
+			}
 			auto reduced = parsed -> reduce();
 			delete parsed;
-			for(auto binding : bindings) {
-				auto bound = reduced ->
-					substitute(binding.first, binding.second);
-				delete reduced;
-				auto bound_red = bound -> reduce();
-				delete bound;
-				reduced = bound_red;
-			}
 			print(*reduced, std::cout);
 			print_derivatives(*reduced, std::cout);
 			delete reduced;
 		} else {
-			e_param param;
-			function *binding;
-			if(parse_unbind(line, param)) {
-				for(auto it = std::begin(bindings);
-						it != std::end(bindings);) {
-					if(it -> first == param) {
-						delete it -> second;
-						bindings.erase(it);
-					} else {
-						it++;
-					}
-				}
-			} else if(parse_bind(line, param, binding)) {
-				bindings.emplace_back(param, binding);
-			} else {
-				std::cout << "Expression parsing failed." << std::endl;
-			}
+			std::cout << "Expression parsing failed.\n";
+			usage();
 		}
+		std::cout << "# ";
 	}
-	for(auto it = std::begin(bindings); it != std::end(bindings);) {
-		delete it -> second;
-		it++;
-	}
+	clear(bindings);
 }
