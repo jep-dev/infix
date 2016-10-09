@@ -66,12 +66,12 @@ bool parse_clear(std::string const& src)
 
 bool parse_quit(std::string const& src)
 {
-	return src == "quit" || src == "exit";
+	return src == "" || src == "quit" || src == "exit";
 }
 
 bool parse_help(std::string const& src)
 {
-	return src == "" || src == "help" || src == "usage";
+	return src == "help" || src == "usage";
 }
 
 void clear(std::vector<std::pair<Math::e_param, Math::function*>> &v)
@@ -85,8 +85,8 @@ void clear(std::vector<std::pair<Math::e_param, Math::function*>> &v)
 void usage(void)
 {
 	std::cout << "Usage:\n"
-		"  {quit|exit}\n"
-		"  {|help|usage}\n"
+		"  {|quit|exit}\n"
+		"  {help|usage}\n"
 		"  {let|set|print}\n"
 		"  {clear|unset} {|all|r|s|t|u|v|w}\n"
 		"  {let|set} {r|s|t|u|v|w} = <expression(r,s,t,u,v,w,e,pi)>\n"
