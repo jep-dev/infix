@@ -1,5 +1,6 @@
 #include "math.hpp"
 #include <iostream>
+#include <utility>
 
 namespace Math {
 	e_type product::get_type(void) const
@@ -68,10 +69,21 @@ namespace Math {
 		}
 		function *l = lhs -> reduce(),
 				 *r = rhs -> reduce();
-		if(*l < *r) {
-			auto temp = r;
-			r = l;
-			l = temp;
+		if(*r < *l) {
+			std::swap(l,r);
+		}
+		if(*l == *r) {
+			delete r;
+			if(l -> get_type() == e_negative) {
+				function *temp = static_cast<const negative*>(l)
+					-> operand -> clone();
+				delete l;
+				l = temp;
+			}
+			auto output = new power(l, new value(2));
+			auto reduced = output -> reduce();
+			delete output;
+			return reduced;
 		}
 		if(l -> constant()) {
 			auto lval = (*l)(0,0,0,0,0,0);
@@ -90,9 +102,7 @@ namespace Math {
 						*rr = rproduct -> rhs -> clone();
 				delete r;
 				if(rr -> constant()) {
-					auto temp = rr;
-					rr = rl;
-					rl = temp;
+					std::swap(rl, rr);
 				}
 				if(rl -> constant()) {
 					auto new_lhs = new product(l, rl);
@@ -104,15 +114,6 @@ namespace Math {
 			}
 		}
 		auto ltype = l -> get_type(), rtype = r -> get_type();
-		if((ltype == e_secant && rtype == e_cosine)
-				|| (ltype == e_cosecant && rtype == e_sine)
-				|| (ltype == e_cotangent && rtype == e_tangent)) {
-			auto temp = r;
-			r = l;
-			l = temp;
-		}
-		ltype = l -> get_type();
-		rtype = r -> get_type();
 		if(ltype == e_cosine && rtype == e_secant) {
 			auto lcast = static_cast<const cosine*>(l);
 			auto rcast = static_cast<const secant*>(r);
@@ -199,24 +200,7 @@ namespace Math {
 			}
 			return output;
 		}
-		if(*l == *r) {
-			delete r;
-			if(l -> get_type() == e_negative) {
-				function *temp = static_cast<const negative*>(l)
-					-> operand -> clone();
-				delete l;
-				l = temp;
-			}
-			auto output = new power(l, new value(2));
-			auto reduced = output -> reduce();
-			delete output;
-			return reduced;
-		}
-		if(*l < *r) {
-			return new product(l,r);
-		} else {
-			return new product(r,l);
-		}
+		return new product(l,r);
 	}
 	std::ostream& product::print(std::ostream &os) const
 	{
