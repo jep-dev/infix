@@ -85,11 +85,22 @@ namespace Math {
 			delete r;
 			return new value(0);
 		}
+		auto ltype = l -> get_type(),
+			 rtype = r -> get_type();
+		if(ltype == e_negative && rtype == e_negative) {
+			return new difference(r, l);
+		}
+		if(ltype == e_negative) {
+			auto l_op = static_cast<const negative*>(l)
+				-> operand -> clone();
+			delete l;
+			return new negative(new sum(l_op, r));
+		}
 		if(r -> get_type() == e_negative) {
 			function *temp = static_cast<const negative*>(r)
 				-> operand -> clone();
 			delete r;
-			return new sum(l,r);
+			return new sum(l, temp);
 		}
 		return new difference(l,r);
 	}
