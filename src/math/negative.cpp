@@ -70,6 +70,14 @@ namespace Math{
 				delete reduced;
 				return output;
 			} break;
+			case e_difference: {
+				auto cast = static_cast<const difference*>(reduced);
+				auto output = new difference(cast -> rhs -> clone(),
+						cast -> lhs -> clone());
+				auto output_red = output -> reduce();
+				delete output;
+				return output_red;
+			} break;
 			case e_product: {
 				auto cast = static_cast<const product*>(reduced);
 				function *lhs, *rhs;
@@ -147,6 +155,9 @@ namespace Math{
 	}
 	std::ostream& negative::print(std::ostream &os) const
 	{
+		if(operand -> order() == e_order_sum) {
+			return os << "-(" << *operand << ')';
+		}
 		return os << '-' << *operand;
 	}
 	negative::negative(function *operand):
