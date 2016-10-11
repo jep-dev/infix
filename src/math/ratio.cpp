@@ -71,8 +71,8 @@ namespace Math {
 		if(constant()) {
 			return new value((*this)(0,0,0,0,0,0));
 		}
-		auto l = numerator->reduce();
-		auto r = denominator->reduce();
+		auto l = numerator -> reduce();
+		auto r = denominator -> reduce();
 		if(l -> constant()) {
 			if(*l == 0) {
 				delete l;
