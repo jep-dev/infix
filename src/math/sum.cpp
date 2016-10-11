@@ -85,8 +85,29 @@ namespace Math {
 			r = l;
 			l = temp;
 		}
+		auto ltype = l -> get_type(),
+			 rtype = r -> get_type();
+		if(ltype == e_negative && rtype == e_negative) {
+			auto l_op = static_cast<const negative*>(l) -> operand -> clone();
+			auto r_op = static_cast<const negative*>(r) -> operand -> clone();
+			delete l;
+			delete r;
+			return new negative(new sum(l_op, r_op));
+		}
+		if(ltype == e_negative) {
+			auto cast = static_cast<const negative*>(l);
+			auto cast_op = cast -> operand -> clone();
+			delete l;
+			return new difference(r, cast_op);
+		}
+		if(rtype == e_negative) {
+			auto cast = static_cast<const negative*>(r);
+			auto cast_op = cast -> operand -> clone();
+			delete r;
+			return new difference(l, cast_op);
+		}
 		if(r -> get_type() == e_product) {
-			auto pro = static_cast<product*>(r);
+			auto pro = static_cast<const product*>(r);
 			auto pro_lhs = pro -> lhs -> clone();
 			auto pro_rhs = pro -> rhs -> clone();
 			delete r;
