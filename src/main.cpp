@@ -131,16 +131,24 @@ int main(int argc, const char *argv[])
 		} else if(parse_bind(line, param, binding)) {
 			bindings.emplace_back(param, binding);
 		} else if(auto parsed = parse_function(line)) {
+			function *reduced = parsed -> reduce();
+			delete parsed;
+			parsed = reduced;
 			for(auto binding : bindings) {
 				auto bound = parsed ->
 					substitute(binding.first, binding.second);
 				delete parsed;
-				parsed = bound;
+				auto bound_red = bound -> reduce();
+				delete bound;
+				parsed = bound_red;
 			}
-			auto reduced = parsed -> reduce();
+			reduced = parsed -> reduce();
 			delete parsed;
 			print(*reduced, std::cout);
-			print_derivatives(*reduced, std::cout);
+			print_terms(*reduced, std::cout, "  Terms:");
+			print_factors(*reduced, std::cout, "  Factors:");
+			std::cout << "  Derivatives:\n";
+			print_derivatives(*reduced, std::cout, "    ");
 			delete reduced;
 		} else {
 			usage();
