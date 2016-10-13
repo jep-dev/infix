@@ -3,6 +3,7 @@
 
 #include <iosfwd>
 #include <cmath>
+#include <vector>
 
 namespace Math {
 	
@@ -26,12 +27,14 @@ namespace Math {
 		e_order_product,
 		e_order_exponent
 	} e_order;
+	std::ostream& operator<<(std::ostream&, e_order const&);
 
 	typedef enum {
 		e_param_r=0, e_param_s, e_param_t,
 		e_param_u, e_param_v, e_param_w,
 		e_param_total
 	} e_param;
+	std::ostream& operator<<(std::ostream&, e_param const&);
 
 	// Abstract base
 	struct function;
@@ -54,6 +57,11 @@ namespace Math {
 	struct sum;
 	struct ratio;
 	struct product;
+
+	void get_factors(function const&,
+			std::vector<function*>&, std::vector<function*>&);
+	void get_terms(function const&,
+			std::vector<function*>&, std::vector<function*>&);
 
 }
 

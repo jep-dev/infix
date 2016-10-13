@@ -1,40 +1,87 @@
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <functional>
 #include <sstream>
 #include <vector>
 
 #include "print.hpp"
+
+void print_order(Math::function const& fn, std::ostream &os, std::string pre)
+{
+	os << pre << ' ' << fn.get_order() << std::endl;
+}
+
+void print_factors(Math::function const& fn, std::ostream &os, std::string pre)
+{
+	using namespace Math;
+	std::vector<function*> num, den;
+	get_factors(fn, num, den);
+	os << pre << " {";
+	int factors = 0;
+	for(auto n : num) {
+		auto reduced = n -> reduce();
+		os << (factors ? ", " : "") << *reduced;
+		delete reduced;
+		delete n;
+		factors++;
+	}
+	os << "} / {";
+	factors = 0;
+	for(auto d : den) {
+		auto reduced = d -> reduce();
+		os << (factors ? ", " : "") << *reduced;
+		delete reduced;
+		delete d;
+		factors++;
+	}
+	os << "}\n";
+}
+
+void print_terms(Math::function const& fn, std::ostream &os, std::string pre)
+{
+	using namespace Math;
+	std::vector<function*> pos, neg;
+	get_terms(fn, pos, neg);
+
+	int terms = 0;
+	os << pre << " +{";
+	for(auto p : pos) {
+		auto reduced = p -> reduce();
+		os << (terms ? ", " : "") << *reduced;
+		delete reduced;
+		delete p;
+		terms++;
+	}
+	os << "}, -{";
+	terms = 0;
+	for(auto n : neg) {
+		auto reduced = n -> reduce();
+		os << (terms ? ", " : "") << *reduced;
+		delete reduced;
+		delete n;
+		terms++;
+	}
+	os << "}" << std::endl;
+}
 
 void print(Math::function const& fn, std::ostream &os, std::string prefix)
 {
 	using namespace Math;
 	os << prefix << "(";
 	int parameters = 0;
-	if(fn.varies(e_param_r)) {
-		os << 'r';
-		parameters++;
-	}
-	if(fn.varies(e_param_s)) {
-		os << (parameters ? ", s" : "s");
-		parameters++;
-	}
-	if(fn.varies(e_param_t)) {
-		os << (parameters ? ", t" : "t");
-		parameters++;
-	}
-	if(fn.varies(e_param_u)) {
-		os << (parameters ? ", u" : "u");
-		parameters++;
-	}
-	if(fn.varies(e_param_v)) {
-		os << (parameters ? ", v" : "v");
-		parameters++;
-	}
-	if(fn.varies(e_param_w)) {
-		os << (parameters ? ", w" : "w");
+	for(int i = 0; i < e_param_total; i++) {
+		auto param = (e_param)i;
+		if(fn.varies(param)) {
+			if(parameters > 0) {
+				os << ", ";
+			}
+			os << param;
+			parameters++;
+		}
 	}
 	auto reduced = fn.reduce();
-	os << ") = " << *reduced << '\n';
+	os << ") = " << *reduced << "\n";
 	delete reduced;
 }
 
