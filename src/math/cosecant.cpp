@@ -6,6 +6,10 @@ namespace Math {
 	{
 		return e_cosecant;
 	}
+	e_order cosecant::get_order(void) const
+	{
+		return e_order_term;
+	}
 	bool cosecant::constant(void) const
 	{
 		return operand->constant();
@@ -13,10 +17,6 @@ namespace Math {
 	bool cosecant::varies(e_param p) const
 	{
 		return operand -> varies(p);
-	}
-	e_order cosecant::order(void) const
-	{
-		return e_order_term;
 	}
 	bool cosecant::operator==(function const& f) const
 	{

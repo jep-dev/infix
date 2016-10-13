@@ -2,6 +2,29 @@
 #include <iostream>
 
 namespace Math {
+	int function::num_operands(function const& fn)
+	{
+		if(fn.get_order() == e_order_term) {
+			auto type = fn.get_type();
+			if(type == e_value || type == e_variable) {
+				return 0;
+			}
+			return 1;
+		}
+		return 2;
+	}
+	/*int function::get_operands(void) const
+	{
+		if(get_order() == e_order_term) {
+			auto type = get_type();
+			if(type == e_value || type == e_variable) {
+				return 0;
+			}
+			return 1;
+		} else {
+			return 2;
+		}
+	}*/
 	bool function::operator!=(function const& f) const
 	{
 		return !(*this == f);

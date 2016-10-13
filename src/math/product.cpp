@@ -7,6 +7,10 @@ namespace Math {
 	{
 		return e_product;
 	}
+	e_order product::get_order(void) const
+	{
+		return e_order_product;
+	}
 	bool product::constant(void) const
 	{
 		return lhs->constant() && rhs->constant();
@@ -14,10 +18,6 @@ namespace Math {
 	bool product::varies(e_param p) const
 	{
 		return lhs -> varies(p) || rhs -> varies(p);
-	}
-	e_order product::order(void) const
-	{
-		return e_order_product;
 	}
 	bool product::operator==(function const& f) const
 	{
@@ -84,6 +84,13 @@ namespace Math {
 			auto reduced = output -> reduce();
 			delete output;
 			return reduced;
+		}
+		if(l -> constant() && *l == 1.0f) {
+			delete l;
+			return r;
+		} else if(r -> constant() && *r == 1.0f) {
+			delete r;
+			return l;
 		}
 		if(l -> constant()) {
 			auto lval = (*l)(0,0,0,0,0,0);
@@ -205,8 +212,8 @@ namespace Math {
 	std::ostream& product::print(std::ostream &os) const
 	{
 
-		auto lcomp = lhs -> order(),
-			 rcomp = rhs -> order();
+		auto lcomp = lhs -> get_order(),
+			 rcomp = rhs -> get_order();
 		if(lhs -> constant() && (*lhs)(0,0,0,0,0,0) == -1) {
 			os << "-";
 			if(rcomp < e_order_product && rcomp > e_order_term) {

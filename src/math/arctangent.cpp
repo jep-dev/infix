@@ -6,6 +6,10 @@ namespace Math {
 	{
 		return e_arctangent;
 	}
+	e_order arctangent::get_order(void) const
+	{
+		return e_order_term;
+	}
 	bool arctangent::constant(void) const
 	{
 		return operand -> constant();
@@ -13,10 +17,6 @@ namespace Math {
 	bool arctangent::varies(e_param p) const
 	{
 		return operand -> varies(p);
-	}
-	e_order arctangent::order(void) const
-	{
-		return e_order_term;
 	}
 	bool arctangent::operator==(function const& f) const
 	{

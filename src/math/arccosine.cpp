@@ -6,6 +6,10 @@ namespace Math {
 	{
 		return e_arccosine;
 	}
+	e_order arccosine::get_order(void) const
+	{
+		return e_order_term;
+	}
 	bool arccosine::constant(void) const
 	{
 		return operand -> constant();
@@ -13,10 +17,6 @@ namespace Math {
 	bool arccosine::varies(e_param p) const
 	{
 		return operand -> varies(p);
-	}
-	e_order arccosine::order(void) const
-	{
-		return e_order_term;
 	}
 	bool arccosine::operator==(function const& f) const
 	{

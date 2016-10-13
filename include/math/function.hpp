@@ -1,13 +1,18 @@
 #ifndef FUNCTION_HPP
 #define FUNCTION_HPP
 
+#include <vector>
+
 namespace Math {
 
 	struct function {
+		static int num_operands(function const&);
+
 		virtual e_type get_type(void) const = 0;
+		virtual e_order get_order(void) const = 0;
+		//virtual int get_operands(void) const;
 		virtual bool constant(void) const = 0;
 		virtual bool varies(e_param) const = 0;
-		virtual e_order order(void) const = 0;
 		bool operator<(function const&) const;
 		bool operator==(float) const;
 		virtual bool operator==(function const&) const = 0;

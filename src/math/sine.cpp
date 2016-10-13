@@ -6,6 +6,10 @@ namespace Math {
 	{
 		return e_sine;
 	}
+	e_order sine::get_order(void) const
+	{
+		return e_order_term;
+	}
 	bool sine::constant(void) const
 	{
 		return operand->constant();
@@ -13,10 +17,6 @@ namespace Math {
 	bool sine::varies(e_param p) const
 	{
 		return operand -> varies(p);
-	}
-	e_order sine::order(void) const
-	{
-		return e_order_term;
 	}
 	bool sine::operator==(function const& f) const
 	{

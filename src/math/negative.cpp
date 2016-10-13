@@ -6,6 +6,10 @@ namespace Math{
 	{
 		return e_negative;
 	}
+	e_order negative::get_order(void) const
+	{
+		return e_order_term;
+	}
 	bool negative::constant(void) const
 	{
 		return operand -> constant();
@@ -13,10 +17,6 @@ namespace Math{
 	bool negative::varies(e_param p) const
 	{
 		return operand -> varies(p);
-	}
-	e_order negative::order(void) const
-	{
-		return e_order_product;
 	}
 	bool negative::operator==(function const& f) const
 	{
@@ -74,6 +74,7 @@ namespace Math{
 				auto cast = static_cast<const difference*>(reduced);
 				auto output = new difference(cast -> rhs -> clone(),
 						cast -> lhs -> clone());
+				delete reduced;
 				auto output_red = output -> reduce();
 				delete output;
 				return output_red;
@@ -155,7 +156,7 @@ namespace Math{
 	}
 	std::ostream& negative::print(std::ostream &os) const
 	{
-		if(operand -> order() == e_order_sum) {
+		if(operand -> get_order() == e_order_sum) {
 			return os << "-(" << *operand << ')';
 		}
 		return os << '-' << *operand;

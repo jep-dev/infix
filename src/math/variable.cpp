@@ -6,6 +6,10 @@ namespace Math {
 	{
 		return e_variable;
 	}
+	e_order variable::get_order(void) const
+	{
+		return e_order_term;
+	}
 	bool variable::constant(void) const
 	{
 		return false;
@@ -13,10 +17,6 @@ namespace Math {
 	bool variable::varies(e_param p) const
 	{
 		return p == param;
-	}
-	e_order variable::order(void) const
-	{
-		return e_order_term;
 	}
 	bool variable::operator==(function const& f) const
 	{

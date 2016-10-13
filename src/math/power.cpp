@@ -6,6 +6,10 @@ namespace Math {
 	{
 		return e_power;
 	}
+	e_order power::get_order(void) const
+	{
+		return e_order_exponent;
+	}
 	bool power::constant(void) const
 	{
 		return (exp->constant() &&
@@ -15,15 +19,6 @@ namespace Math {
 	bool power::varies(e_param p) const
 	{
 		return !constant() && (base -> varies(p) || exp -> varies(p));
-	}
-	e_order power::order(void) const
-	{
-		if(exp -> constant()) {
-			if(*exp == 0 || *exp == 1) {
-				return e_order_term;
-			}
-		}
-		return e_order_exponent;
 	}
 	bool power::operator==(function const& f) const
 	{
@@ -99,9 +94,12 @@ namespace Math {
 		if(exp_red -> constant()) {
 			auto exp_value = (*exp_red)(0,0,0,0,0,0);
 			if(exp_value == 0) {
+				delete base_red;
+				delete exp_red;
 				return new value(1);
 			}
 			if(exp_value == 1) {
+				delete exp_red;
 				return base_red;
 			}
 			if(exp_value < 0) {
@@ -123,13 +121,13 @@ namespace Math {
 	}
 	std::ostream& power::print(std::ostream &os) const
 	{
-		if((base -> order()) > e_order_term) {
+		if((base -> get_order()) > e_order_term) {
 			os << "(" << *base << ")";
 		} else {
 			os << *base;
 		}
 		os << '^';
-		if((exp -> order()) > e_order_term) {
+		if((exp -> get_order()) > e_order_term) {
 			os << "(" << *exp << ")";
 		} else {
 			return os << *exp;

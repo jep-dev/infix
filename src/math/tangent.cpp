@@ -6,6 +6,10 @@ namespace Math {
 	{
 		return e_tangent;
 	}
+	e_order tangent::get_order(void) const
+	{
+		return e_order_term;
+	}
 	bool tangent::constant(void) const
 	{
 		return operand -> constant();
@@ -13,10 +17,6 @@ namespace Math {
 	bool tangent::varies(e_param p) const
 	{
 		return operand -> varies(p);
-	}
-	e_order tangent::order(void) const
-	{
-		return e_order_term;
 	}
 	bool tangent::operator==(function const& f) const
 	{

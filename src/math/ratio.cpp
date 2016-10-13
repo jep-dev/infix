@@ -6,6 +6,10 @@ namespace Math {
 	{
 		return e_ratio;
 	}
+	e_order ratio::get_order(void) const
+	{
+		return e_order_ratio;
+	}
 	bool ratio::constant(void) const
 	{
 		return numerator->constant() &&
@@ -15,10 +19,6 @@ namespace Math {
 	{
 		return !constant() && (numerator -> varies(p)
 				|| denominator -> varies(p));
-	}
-	e_order ratio::order(void) const
-	{
-		return e_order_ratio;
 	}
 	bool ratio::operator==(function const& f) const
 	{
@@ -147,8 +147,8 @@ namespace Math {
 		return new ratio(num_red, den_red);
 	}
 	std::ostream& ratio::print(std::ostream &os) const {
-		auto lcomp = numerator -> order(),
-			 rcomp = denominator -> order();
+		auto lcomp = numerator -> get_order(),
+			 rcomp = denominator -> get_order();
 		if(lcomp <= e_order_ratio && lcomp > e_order_term) {
 			os << '(' << *numerator << ')';
 		} else {

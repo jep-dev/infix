@@ -6,6 +6,10 @@ namespace Math {
 	{
 		return e_logarithm;
 	}
+	e_order logarithm::get_order(void) const
+	{
+		return e_order_term;
+	}
 	bool logarithm::constant(void) const
 	{
 		return operand->constant();
@@ -13,10 +17,6 @@ namespace Math {
 	bool logarithm::varies(e_param p) const
 	{
 		return operand -> varies(p);
-	}
-	e_order logarithm::order(void) const
-	{
-		return e_order_term;
 	}
 	bool logarithm::operator==(function const& f) const
 	{

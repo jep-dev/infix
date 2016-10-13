@@ -6,6 +6,10 @@ namespace Math {
 	{
 		return e_cotangent;
 	}
+	e_order cotangent::get_order(void) const
+	{
+		return e_order_term;
+	}
 	bool cotangent::constant(void) const
 	{
 		return operand->constant();
@@ -13,10 +17,6 @@ namespace Math {
 	bool cotangent::varies(e_param p) const
 	{
 		return operand -> varies(p);
-	}
-	e_order cotangent::order(void) const
-	{
-		return e_order_term;
 	}
 	bool cotangent::operator==(function const& f) const
 	{

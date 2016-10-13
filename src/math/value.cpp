@@ -6,6 +6,10 @@ namespace Math {
 	{
 		return e_value;
 	}
+	e_order value::get_order(void) const
+	{
+		return e_order_term;
+	}
 	bool value::constant(void) const
 	{
 		return true;
@@ -13,10 +17,6 @@ namespace Math {
 	bool value::varies(e_param p) const
 	{
 		return false;
-	}
-	e_order value::order(void) const 
-	{
-		return e_order_term;
 	}
 	bool value::operator==(function const& f) const
 	{
@@ -48,6 +48,9 @@ namespace Math {
 	}
 	function* value::reduce(void) const
 	{
+		if(val < 0) {
+			return new negative(new value(-val));
+		}
 		return clone();
 	}
 	std::ostream& value::print(std::ostream &os) const

@@ -1,10 +1,16 @@
 #include "math.hpp"
+#include <algorithm>
 #include <iostream>
+#include <vector>
 
 namespace Math {
 	e_type sum::get_type(void) const
 	{
 		return e_sum;
+	}
+	e_order sum::get_order(void) const
+	{
+		return e_order_sum;
 	}
 	bool sum::constant(void) const
 	{
@@ -13,10 +19,6 @@ namespace Math {
 	bool sum::varies(e_param p) const
 	{
 		return lhs -> varies(p) || rhs -> varies(p);
-	}
-	e_order sum::order(void) const
-	{
-		return e_order_sum;
 	}
 	bool sum::operator==(function const& f) const
 	{
@@ -81,47 +83,30 @@ namespace Math {
 			return reduced;
 		}
 		if(*r < *l) {
-			auto temp = r;
-			r = l;
-			l = temp;
+			std::swap(l,r);
 		}
-		auto ltype = l -> get_type(),
-			 rtype = r -> get_type();
+		auto ltype = l -> get_type(), rtype = r -> get_type();
 		if(ltype == e_negative && rtype == e_negative) {
-			auto l_op = static_cast<const negative*>(l) -> operand -> clone();
-			auto r_op = static_cast<const negative*>(r) -> operand -> clone();
+			auto ln = static_cast<const negative*>(l),
+				 rn = static_cast<const negative*>(r);
+			auto lop = ln -> operand -> clone(),
+				 rop = rn -> operand -> clone();
 			delete l;
 			delete r;
-			return new negative(new sum(l_op, r_op));
-		}
-		if(ltype == e_negative) {
-			auto cast = static_cast<const negative*>(l);
-			auto cast_op = cast -> operand -> clone();
+			return new negative(new sum(lop, rop));
+		} else if(ltype == e_negative) {
+			auto ln = static_cast<const negative*>(l);
+			auto lop = ln -> operand -> clone();
 			delete l;
-			return new difference(r, cast_op);
-		}
-		if(rtype == e_negative) {
-			auto cast = static_cast<const negative*>(r);
-			auto cast_op = cast -> operand -> clone();
+			return new difference(r, lop);
+		} else if(rtype == e_negative) {
+			auto rn = static_cast<const negative*>(r);
+			auto rop = rn -> operand -> clone();
 			delete r;
-			return new difference(l, cast_op);
+			return new difference(l, rop);
+		} else {
+			return new sum(l, r);
 		}
-		if(r -> get_type() == e_product) {
-			auto pro = static_cast<const product*>(r);
-			auto pro_lhs = pro -> lhs -> clone();
-			auto pro_rhs = pro -> rhs -> clone();
-			delete r;
-			if(pro_lhs -> constant() && *pro_lhs == -1) {
-				delete pro_lhs;
-				return new difference(l, pro_rhs);
-			}
-			if(pro_rhs -> constant() && *pro_rhs == -1) {
-				delete pro_rhs;
-				return new difference(l, pro_lhs);
-			}
-			r = new product(pro_lhs, pro_rhs);
-		}
-		return new sum(l, r);
 	}
 	std::ostream& sum::print(std::ostream &os) const
 	{

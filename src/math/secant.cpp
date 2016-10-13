@@ -6,6 +6,10 @@ namespace Math {
 	{
 		return e_secant;
 	}
+	e_order secant::get_order(void) const
+	{
+		return e_order_term;
+	}
 	bool secant::constant(void) const
 	{
 		return operand->constant();
@@ -13,10 +17,6 @@ namespace Math {
 	bool secant::varies(e_param p) const
 	{
 		return operand -> varies(p);
-	}
-	e_order secant::order(void) const
-	{
-		return e_order_term;
 	}
 	bool secant::operator==(function const& f) const
 	{

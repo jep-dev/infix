@@ -6,6 +6,10 @@ namespace Math {
 	{
 		return e_difference;
 	}
+	e_order difference::get_order(void) const
+	{
+		return e_order_sum;
+	}
 	bool difference::constant(void) const
 	{
 		return lhs->constant() && rhs->constant();
@@ -13,10 +17,6 @@ namespace Math {
 	bool difference::varies(e_param p) const
 	{
 		return lhs -> varies(p) || rhs -> varies(p);
-	}
-	e_order difference::order(void) const
-	{
-		return e_order_sum;
 	}
 	bool difference::operator==(function const& f) const
 	{
@@ -107,7 +107,7 @@ namespace Math {
 	std::ostream& difference::print(std::ostream &os) const
 	{
 		os << *lhs << "-";
-		if(rhs->order() == e_order_sum) {
+		if(rhs->get_order() == e_order_sum) {
 			os << "(" << *rhs << ")";
 		} else {
 			os << *rhs;

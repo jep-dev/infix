@@ -6,6 +6,10 @@ namespace Math {
 	{
 		return e_cosine;
 	}
+	e_order cosine::get_order(void) const
+	{
+		return e_order_term;
+	}
 	bool cosine::constant(void) const
 	{
 		return operand->constant();
@@ -13,10 +17,6 @@ namespace Math {
 	bool cosine::varies(e_param p) const
 	{
 		return operand -> varies(p);
-	}
-	e_order cosine::order(void) const
-	{
-		return e_order_term;
 	}
 	bool cosine::operator==(function const& f) const
 	{
