@@ -153,7 +153,7 @@ bool parse_binary(std::string const& word,
 {
 	int len = word.length();
 	std::string bin_operators = "+/*^",
-		operators = "-" + bin_operators;
+		operators = "-+/*^";
 	bool found = false;
 	for(auto op : operators) {
 		int depth = 0;
@@ -351,9 +351,31 @@ Math::function* get_function(expr *e)
 	}
 }
 
+std::string preparse(std::string const& src)
+{
+	std::string dest;
+	char prev = ')';
+	for(auto cur : src) {
+		if(cur == '-') {
+			switch(prev) {
+				case '+': case '/':
+				case '*': case '^':
+				case '(': case ')':
+					break;
+				default:
+					dest += '+';
+					break;
+			}
+		}
+		dest += cur;
+		prev = cur;
+	}
+	return dest;
+}
+
 Math::function* parse_function(std::string const& src)
 {
-	auto parsed = parse_expr(src);
+	auto parsed = parse_expr(preparse(src));
 	if(!parsed) return nullptr;
 	auto output = get_function(parsed);
 	delete parsed;

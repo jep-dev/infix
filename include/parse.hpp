@@ -17,6 +17,7 @@ bool parse_binary(std::string const&, char&, std::string&, std::string&);
 expr* parse_expr(std::string const&);
 bool get_param(char, Math::e_param&);
 Math::function* get_function(expr*);
+std::string preparse(std::string const&);
 Math::function* parse_function(std::string const&);
 
 #endif
