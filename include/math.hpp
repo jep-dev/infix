@@ -58,10 +58,8 @@ namespace Math {
 	struct ratio;
 	struct product;
 
-	void get_factors(function const&,
-			std::vector<function*>&, std::vector<function*>&);
-	void get_terms(function const&,
-			std::vector<function*>&, std::vector<function*>&);
+	void get_factors(function const&, std::vector<function*>&);
+	void get_terms(function const&, std::vector<function*>&);
 
 }
 

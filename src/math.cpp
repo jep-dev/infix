@@ -42,122 +42,173 @@ namespace Math {
 		return os << (char)(param+'r');
 	}
 
-	void get_factors(function const& fn,
-			std::vector<function*> &num, std::vector<function*> &den)
+	void get_factors(function const& fn, std::vector<function*> &factors)
 	{
-		auto add = [] (function *fn, std::vector<function*> &vec) {
+		auto add = [] (function const& fn, bool sign,
+				std::vector<function*> &vec) {
 			function *lbase, *lexp;
-			if(fn -> get_type() == e_power) {
-				auto cast = static_cast<const power*>(fn);
+			if(fn.get_type() == e_power) {
+				auto cast = static_cast<const power*>(&fn);
 				lbase = cast -> base -> clone();
 				lexp = cast -> exp -> clone();
 			} else {
-				lbase = fn -> clone();
+				lbase = fn.clone();
 				lexp = new value(1);
 			}
+			if(!sign) {
+				lexp = new negative(lexp);
+			}
 			bool found = false;
-			for(auto vit = std::begin(vec); vit != std::end(vec);) {
-				auto cast = static_cast<const power*>(*vit);
-				function *rbase = cast -> base -> clone(),
-					*rexp = cast -> exp -> clone();
-				if(*lbase == *rbase) {
+			for(auto it = std::begin(vec); it != std::end(vec);) {
+				auto cast = static_cast<const power*>(*it);
+				if(*lbase == *(cast -> base)) {
 					found = true;
-					delete *vit;
-					function *exp = new sum(lexp -> clone(), rexp -> clone());
-					*vit = new power(lbase -> clone(), exp -> reduce());
+					function *exp = new sum(lexp, cast -> exp -> clone());
+					delete *it;
+					*it = new power(lbase, exp -> reduce());
 					delete exp;
+					break;
 				}
-				delete rbase;
-				delete rexp;
-				if(found) break;
-				else vit++;
+				it++;
 			}
 			if(!found) {
 				vec.emplace_back(new power(lbase, lexp));
-			} else {
-				delete lbase;
-				delete lexp;
 			}
 		};
-		std::function<void(function*, std::vector<function*>&,
-				std::vector<function*>&)> process;
-		process = [&] (function* fn, std::vector<function*> &num,
-				std::vector<function*> &den) {
-			auto f_type = fn -> get_type();
-			auto f_order = fn -> get_order();
-			if(f_order == e_order_product) {
-				auto cast = static_cast<const product*>(fn);
-				process(cast -> lhs -> clone(), num, den);
-				process(cast -> rhs -> clone(), num, den);
-			} else if(f_order == e_order_ratio) {
-				auto cast = static_cast<const ratio*>(fn);
-				process(cast -> numerator -> clone(), num, den);
-				process(cast -> denominator -> clone(), den, num);
-			} else if(f_type == e_negative) {
-				auto cast = static_cast<const negative*>(fn);
-				process(new value(-1), num, den);
-				process(cast -> operand -> clone(), num, den);
-			} else {
-				add(fn, num);
+		std::function<void(function*, bool)> process;
+		process = [&] (function *fn, bool sign) {
+			switch(fn -> get_type()) {
+				case e_product: {
+					auto cast = static_cast<const product*>(fn);
+					process(cast -> lhs -> clone(), sign);
+					process(cast -> rhs -> clone(), sign);
+				} break;
+				case e_ratio: {
+					auto cast = static_cast<const ratio*>(fn);
+					process(cast -> numerator -> clone(), sign);
+					process(cast -> denominator -> clone(), !sign);
+				} break;
+				case e_negative: {
+					auto cast = static_cast<const negative*>(fn);
+					process(new value(-1), sign);
+					process(cast -> operand -> clone(), sign);
+				} break;
+				default:
+					add(*fn, sign, factors);
+					break;
 			}
 			delete fn;
 		};
-		process(fn.reduce(), num, den);
-		auto compare = [](function *a, function *b) -> bool {
-			return *a < *b;
+		process(fn.reduce(), true);
+		auto compare = [] (function *a, function *b) -> bool {
+			auto lcast = static_cast<const power*>(a),
+				 rcast = static_cast<const power*>(b);
+			auto lbase = lcast -> base, lexp = lcast -> exp,
+				 rbase = rcast -> base, rexp = rcast -> exp;
+			return *rexp < *lexp || (*lexp == *rexp && *lbase < *rbase);
 		};
-		std::sort(std::begin(num), std::end(num), compare);
-		std::sort(std::begin(den), std::end(den), compare);
-		auto reduce = [] (std::vector<function*> &vec) {
-			for(auto it = std::begin(vec); it != std::end(vec);) {
-				auto cast = static_cast<const power*>(*it);
-				if(*(cast -> exp) == 0) {
-					delete *it;
-					vec.erase(it);
-				} else {
-					it++;
-				}
-			}
-		};
-		reduce(num);
-		reduce(den);
-	}
-
-	void get_terms(function const& fn, std::vector<function*> &pos,
-			std::vector<function*> &neg)
-	{
-		std::function<void(function*, std::vector<function*>&,
-				std::vector<function*>&)> process;
-		process = [&] (function *fn, std::vector<function*> &pos,
-				std::vector<function*> &neg) {
-			auto f_type = fn -> get_type();
-			auto f_order = fn -> get_order();
-			if(f_order == e_order_sum) {
-				if(f_type == e_sum) {
-					auto cast = static_cast<const sum*>(fn);
-					process(cast -> lhs -> clone(), pos, neg);
-					process(cast -> rhs -> clone(), pos, neg);
-				} else if(f_type == e_difference) {
-					auto cast = static_cast<const difference*>(fn);
-					process(cast -> lhs -> clone(), pos, neg);
-					process(cast -> rhs -> clone(), neg, pos);
-				}
-				delete fn;
-			} else if(f_type == e_negative) {
-				auto cast = static_cast<const negative*>(fn);
-				process(cast -> operand -> clone(), neg, pos);
-				delete fn;
+		std::sort(std::begin(factors), std::end(factors), compare);
+		for(auto it = std::begin(factors); it != std::end(factors);) {
+			auto cast = static_cast<const power*>(*it);
+			if(*(cast -> exp) == 0 || *(cast -> base) == 1) {
+				delete *it;
+				it = factors.erase(it);
 			} else {
-				pos.emplace_back(fn);
+				it++;
+			}
+		}
+	}
+	
+	void get_terms(function const& fn, std::vector<function*> &terms)
+	{
+		auto add = [] (function *fn, bool sign, std::vector<function*> &vec) {
+			bool found = false, split = false;
+			function *ll, *lr;
+			if(fn -> get_type() == e_product) {
+				auto cast = static_cast<const product*>(fn);
+				if(cast -> lhs -> constant()) {
+					ll = cast -> lhs -> clone();
+					lr = cast -> rhs -> clone();
+					split = true;
+				} else if(cast -> rhs -> constant()) {
+					ll = cast -> rhs -> clone();
+					lr = cast -> lhs -> clone();
+					split = true;
+				}
+			}
+			if(!split) {
+				ll = new value(1);
+				lr = fn -> clone();
+			}
+			if(!sign) {
+				ll = new negative(ll);
+			}
+			for(auto it = std::begin(vec); it != std::end(vec);) {
+				auto cast = static_cast<const product*>(*it);
+				auto rl = cast -> lhs -> clone(),
+					 rr = cast -> rhs -> clone();
+				if(*lr == *rr) {
+					found = true;
+					delete rr;
+					delete *it;
+					function *lhs = new sum(ll, rl),
+						*lhs_red = lhs -> reduce();
+					delete lhs;
+					*it = new product(lhs_red, lr);
+					break;
+				}
+				delete rl;
+				delete rr;
+				it++;
+			}
+			if(!found) {
+				vec.emplace_back(new product(ll, lr));
 			}
 		};
-		process(fn.reduce(), pos, neg);
-		
-		auto compare = [](function *a, function *b) -> bool {
-			return *a < *b;
+		std::function<void(function*, bool)> process;
+		process = [&] (function *fn, bool sign) {
+			switch(fn -> get_type()) {
+				case e_sum: {
+					auto cast = static_cast<const sum*>(fn);
+					process(cast -> lhs -> clone(), sign);
+					process(cast -> rhs -> clone(), sign);
+				} break;
+				case e_difference: {
+					auto cast = static_cast<const difference*>(fn);
+					process(cast -> lhs -> clone(), sign);
+					process(cast -> rhs -> clone(), !sign);
+				} break;
+				case e_negative: {
+					auto cast = static_cast<const negative*>(fn);
+					process(cast -> operand -> clone(), !sign);
+				} break;
+				default:
+					add(fn, sign, terms);
+					break;
+			}
+			delete fn;
 		};
-		std::sort(std::begin(pos), std::end(pos), compare);
-		std::sort(std::begin(neg), std::end(neg), compare);
+		process(fn.clone(), true);
+		auto compare = [] (function *a, function *b) -> bool {
+			auto lcast = static_cast<const product*>(a),
+				 rcast = static_cast<const product*>(b);
+			auto ll = lcast -> lhs, lr = lcast -> rhs,
+				 rl = rcast -> lhs, rr = rcast -> rhs;
+			auto ll_val = (*ll)(0,0,0,0,0,0),
+				 rl_val = (*rl)(0,0,0,0,0,0);
+			bool lpos = ll_val > 0, rpos = rl_val > 0;
+			return (lpos && !rpos) || (lpos && rpos && *lr < *rr);
+		};
+		std::sort(std::begin(terms), std::end(terms), compare);
+		for(auto it = std::begin(terms); it != std::end(terms);) {
+			function *fn = (*it) -> reduce();
+			if(*fn == 0) {
+				delete *it;
+				it = terms.erase(it);
+			} else {
+				it++;
+			}
+			delete fn;
+		}
 	}
-
 }
