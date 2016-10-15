@@ -75,7 +75,48 @@ namespace Math {
 			delete r;
 			return l;
 		}
-		if(*l == *r) {
+
+		function *lterms = nullptr, *rterms = nullptr;
+		std::vector<function*> terms;
+		get_terms(*l, terms);
+		get_terms(*r, terms);
+		delete l;
+		delete r;
+		for(auto term : terms) {
+			auto cast = static_cast<const product*>(term);
+			auto lhs_val = (*(cast -> lhs))(0,0,0,0,0,0);
+			if(lhs_val > 0) {
+				function *reduced = term -> reduce();
+				delete term;
+				if(lterms) {
+					lterms = new sum(lterms, reduced);
+				} else {
+					lterms = reduced;
+				}
+			} else {
+				auto cast_rhs = cast -> rhs -> clone();
+				delete term;
+				term = new product(new value(-lhs_val), cast_rhs);
+				if(rterms) {
+					rterms = new sum(rterms, term -> reduce());
+				} else {
+					rterms = term -> reduce();
+				}
+				delete term;
+			}
+		}
+		if(lterms && rterms) {
+			return new difference(lterms, rterms);
+		} else if(lterms) {
+			return lterms;
+		} else if(rterms) {
+			return new negative(rterms);
+		} else {
+			return new value(0);
+		}
+
+		// -- Old reduce
+		/*if(*l == *r) {
 			delete r;
 			auto output = new product(new value(2), l);
 			auto reduced = output -> reduce();
@@ -106,7 +147,7 @@ namespace Math {
 			return new difference(l, rop);
 		} else {
 			return new sum(l, r);
-		}
+		}*/
 	}
 	std::ostream& sum::print(std::ostream &os) const
 	{
