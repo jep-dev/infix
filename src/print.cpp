@@ -7,7 +7,7 @@
 
 #include "print.hpp"
 
-void print(std::vector<Math::function*> &vec, std::ostream &os) {
+std::ostream& print(std::vector<Math::function*> &vec, std::ostream &os) {
 	int count = 0;
 	for(auto f : vec) {
 		auto red = f -> reduce();
@@ -15,45 +15,43 @@ void print(std::vector<Math::function*> &vec, std::ostream &os) {
 		delete red;
 		count++;
 	}
+	return os;
 }
 
-void print_order(Math::function const& fn, std::ostream &os, std::string pre)
+std::ostream& print_order(Math::function const& fn,
+		std::ostream &os, std::string pre)
 {
-	os << pre << ' ' << fn.get_order() << std::endl;
+	return os << pre << ' ' << fn.get_order() << std::endl;
 }
 
-void print_factors(Math::function const& fn, std::ostream &os, std::string pre)
-{
-	using namespace Math;
-	std::vector<function*> num, den;
-	get_factors(fn, num, den);
-	print(num, os << pre << " {");
-	print(den, os << "} / {");
-	os << "}\n";
-	for(auto n : num) {
-		delete n;
-	}
-	for(auto d : den) {
-		delete d;
-	}
-}
-
-void print_terms(Math::function const& fn, std::ostream &os, std::string pre)
+std::ostream& print_factors(Math::function const& fn,
+		std::ostream &os, std::string pre)
 {
 	using namespace Math;
-	std::vector<function*> pos, neg;
-	get_terms(fn, pos, neg);
-
-	print(pos, os << pre << " {");
-	print(neg, os << "} - {");
+	std::vector<function*> factors;
+	get_factors(fn, factors);
+	print(factors, os << pre << " {");
 	os << "}\n";
-	for(auto p : pos)
-		delete p;
-	for(auto n : neg)
-		delete n;
+	for(auto factor : factors)
+		delete factor;
+	return os;
 }
 
-void print(Math::function const& fn, std::ostream &os, std::string prefix)
+std::ostream& print_terms(Math::function const& fn,
+		std::ostream &os, std::string pre)
+{
+	using namespace Math;
+	std::vector<function*> terms;
+	get_terms(fn, terms);
+	print(terms, os << pre << " {");
+	os << "}\n";
+	for(auto term : terms)
+		delete term;
+	return os;
+}
+
+std::ostream& print(Math::function const& fn,
+		std::ostream &os, std::string prefix)
 {
 	using namespace Math;
 	os << prefix << '(';
@@ -71,9 +69,10 @@ void print(Math::function const& fn, std::ostream &os, std::string prefix)
 	auto reduced = fn.reduce();
 	os << ") = " << *reduced << '\n';
 	delete reduced;
+	return os;
 }
 
-void print_derivative(Math::function const& fn, Math::e_param p,
+std::ostream& print_derivative(Math::function const& fn, Math::e_param p,
 		std::ostream &os, std::string prefix)
 {
 	using namespace Math;
@@ -88,15 +87,17 @@ void print_derivative(Math::function const& fn, Math::e_param p,
 		delete dx;
 		delete df_dx;
 	}
+	return os;
 }
 
-void print_derivatives(Math::function const& fn,
+std::ostream& print_derivatives(Math::function const& fn,
 		std::ostream &os, std::string prefix)
 {
 	using namespace Math;
 	for(int i = 0; i < e_param_total; i++) {
 		print_derivative(fn, (e_param)i, os, prefix);
 	}
+	return os;
 }
 
 void columnate(std::string src, std::ostream &dest, int len) {

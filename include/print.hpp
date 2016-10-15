@@ -5,16 +5,19 @@
 #include <string>
 #include <iosfwd>
 
-void print(Math::function const&, std::ostream&, std::string = "f");
-void print_order(Math::function const&, std::ostream&, std::string = "");
-
-void print_factors(Math::function const&, std::ostream&, std::string = "");
-void print_terms(Math::function const&, std::ostream&, std::string = "");
-
-void print_derivative(Math::function const&, Math::e_param,
+std::ostream& print(Math::function const&,
+		std::ostream&, std::string = "f");
+std::ostream& print_order(Math::function const&,
 		std::ostream&, std::string = "");
-void print_derivatives(Math::function const&,
+std::ostream& print_factors(Math::function const&,
 		std::ostream&, std::string = "");
+std::ostream& print_terms(Math::function const&,
+		std::ostream&, std::string = "");
+std::ostream& print_derivative(Math::function const&, Math::e_param,
+		std::ostream&, std::string = "");
+std::ostream& print_derivatives(Math::function const&,
+		std::ostream&, std::string = "");
+
 void columnate(std::string, std::ostream&, int = 40);
 
 #endif
