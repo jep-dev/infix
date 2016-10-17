@@ -115,7 +115,7 @@ namespace Math {
 			auto cast_base = cast -> base -> clone();
 			auto cast_exp = cast -> exp -> clone();
 			delete base_red;
-			return new power(cast_base, new sum(exp_red, cast_exp));
+			return new power(cast_base, new product(exp_red, cast_exp));
 		}
 		return new power(base_red, exp_red);
 	}
