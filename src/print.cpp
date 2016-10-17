@@ -7,47 +7,10 @@
 
 #include "print.hpp"
 
-std::ostream& print(std::vector<Math::function*> &vec, std::ostream &os) {
-	int count = 0;
-	for(auto f : vec) {
-		auto red = f -> reduce();
-		os << (count ? ", " : "") << *red;
-		delete red;
-		count++;
-	}
-	return os;
-}
-
 std::ostream& print_order(Math::function const& fn,
 		std::ostream &os, std::string pre)
 {
 	return os << pre << ' ' << fn.get_order() << std::endl;
-}
-
-std::ostream& print_factors(Math::function const& fn,
-		std::ostream &os, std::string pre)
-{
-	using namespace Math;
-	std::vector<function*> factors;
-	get_factors(fn, factors);
-	print(factors, os << pre << " {");
-	os << "}\n";
-	for(auto factor : factors)
-		delete factor;
-	return os;
-}
-
-std::ostream& print_terms(Math::function const& fn,
-		std::ostream &os, std::string pre)
-{
-	using namespace Math;
-	std::vector<function*> terms;
-	get_terms(fn, terms);
-	print(terms, os << pre << " {");
-	os << "}\n";
-	for(auto term : terms)
-		delete term;
-	return os;
 }
 
 std::ostream& print(Math::function const& fn,
@@ -56,17 +19,14 @@ std::ostream& print(Math::function const& fn,
 	using namespace Math;
 	os << prefix << '(';
 	int parameters = 0;
+	auto reduced = function::reduce(fn);
+	//auto reduced = fn.reduce();
 	for(int i = 0; i < e_param_total; i++) {
 		auto param = (e_param)i;
-		if(fn.varies(param)) {
-			if(parameters > 0) {
-				os << ", ";
-			}
-			os << param;
-			parameters++;
+		if(reduced -> varies(param)) {
+			os << (parameters++ > 0 ? ", " : "") << param;
 		}
 	}
-	auto reduced = fn.reduce();
 	os << ") = " << *reduced << '\n';
 	delete reduced;
 	return os;
@@ -76,17 +36,16 @@ std::ostream& print_derivative(Math::function const& fn, Math::e_param p,
 		std::ostream &os, std::string prefix)
 {
 	using namespace Math;
-	if(fn.varies(p)) {
-		auto reduced = fn.reduce();
+	auto reduced = function::reduce(fn);
+	//auto reduced = fn.reduce();
+	if(reduced -> varies(p)) {
 		auto dx = new variable(p);
-		auto df_dx = fn.derive(p);
-		std::ostringstream oss;
-		oss << prefix << "df/d" << *dx << " ";
-		print(*df_dx, os, oss.str());
-		delete reduced;
+		auto df_dx = reduced -> derive(p);
+		print(*df_dx, os << prefix << "df/d" << *dx << ' ', "");
 		delete dx;
 		delete df_dx;
 	}
+	delete reduced;
 	return os;
 }
 
