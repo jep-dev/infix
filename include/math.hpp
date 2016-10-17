@@ -57,9 +57,10 @@ namespace Math {
 	struct sum;
 	struct ratio;
 	struct product;
+	struct power;
 
-	void get_factors(function const&, std::vector<function*>&);
-	void get_terms(function const&, std::vector<function*>&);
+	void get_factors(function const&, std::vector<power*>&);
+	void get_terms(function const&, std::vector<product*>&);
 
 }
 

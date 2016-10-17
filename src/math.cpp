@@ -42,162 +42,196 @@ namespace Math {
 		return os << (char)(param+'r');
 	}
 
-	void get_factors(function const& fn, std::vector<function*> &factors)
+	void add_factor(function *fn, bool sign, std::vector<power*> &vec)
 	{
-		auto add = [] (function const& fn, bool sign,
-				std::vector<function*> &vec) {
-			function *lbase, *lexp;
-			if(fn.get_type() == e_power) {
-				auto cast = static_cast<const power*>(&fn);
+		function *lbase, *lexp;
+		switch(fn -> get_type()) {
+			case e_power: {
+				auto cast = static_cast<const power*>(fn);
 				lbase = cast -> base -> clone();
 				lexp = cast -> exp -> clone();
-			} else {
-				lbase = fn.clone();
+			} break;
+			case e_secant: {
+				auto cast = static_cast<const secant*>(fn);
+				lbase = new cosine(cast -> operand -> clone());
+				lexp = new value(-1);
+			} break;
+			case e_cosecant: {
+				auto cast = static_cast<const cosecant*>(fn);
+				lbase = new sine(cast -> operand -> clone());
+				lexp = new value(-1);
+			} break;
+			case e_cotangent: {
+				auto cast = static_cast<const cotangent*>(fn);
+				add_factor(new cosine(cast -> operand -> clone()), sign, vec);
+				add_factor(new sine(cast -> operand -> clone()), !sign, vec);
+				delete fn;
+				return;
+			} break;
+			case e_tangent: {
+				auto cast = static_cast<const tangent*>(fn);
+				add_factor(new sine(cast -> operand -> clone()), sign, vec);
+				add_factor(new cosine(cast -> operand -> clone()), !sign, vec);
+				delete fn;
+				return;
+			} break;
+			default: {
+				lbase = fn -> clone();
 				lexp = new value(1);
+			} break;
+		}
+		if(!sign) {
+			lexp = new negative(lexp);
+		}
+		bool found = false;
+		for(auto it = std::begin(vec); it != std::end(vec);) {
+			auto rbase = (*it) -> base, rexp = (*it) -> exp;
+			if(*lbase == *rbase) {
+				found = true;
+				function *exp = new sum(lexp, rexp -> clone());
+				delete *it;
+				/*
+ 				*it = new power(lbase, exp -> reduce());
+				delete exp;
+				*/
+				*it = new power(lbase, exp);
+				break;
 			}
-			if(!sign) {
-				lexp = new negative(lexp);
-			}
-			bool found = false;
-			for(auto it = std::begin(vec); it != std::end(vec);) {
-				auto cast = static_cast<const power*>(*it);
-				if(*lbase == *(cast -> base)) {
-					found = true;
-					function *exp = new sum(lexp, cast -> exp -> clone());
-					delete *it;
-					*it = new power(lbase, exp -> reduce());
-					delete exp;
-					break;
-				}
-				it++;
-			}
-			if(!found) {
-				vec.emplace_back(new power(lbase, lexp));
-			}
-		};
-		std::function<void(function*, bool)> process;
-		process = [&] (function *fn, bool sign) {
-			switch(fn -> get_type()) {
-				case e_product: {
-					auto cast = static_cast<const product*>(fn);
-					process(cast -> lhs -> clone(), sign);
-					process(cast -> rhs -> clone(), sign);
-				} break;
-				case e_ratio: {
-					auto cast = static_cast<const ratio*>(fn);
-					process(cast -> numerator -> clone(), sign);
-					process(cast -> denominator -> clone(), !sign);
-				} break;
-				case e_negative: {
-					auto cast = static_cast<const negative*>(fn);
-					process(new value(-1), sign);
-					process(cast -> operand -> clone(), sign);
-				} break;
-				default:
-					add(*fn, sign, factors);
-					break;
-			}
-			delete fn;
-		};
-		process(fn.reduce(), true);
-		auto compare = [] (function *a, function *b) -> bool {
-			auto lcast = static_cast<const power*>(a),
-				 rcast = static_cast<const power*>(b);
-			auto lbase = lcast -> base, lexp = lcast -> exp,
-				 rbase = rcast -> base, rexp = rcast -> exp;
+			it++;
+		}
+		if(!found) {
+			vec.emplace_back(new power(lbase, lexp));
+		}
+		delete fn;
+	}
+	void add_factors(function *fn, bool sign, std::vector<power*> &factors)
+	{
+		switch(fn -> get_type()) {
+			case e_product: {
+				auto cast = static_cast<const product*>(fn);
+				add_factors(cast -> lhs -> clone(), sign, factors);
+				add_factors(cast -> rhs -> clone(), sign, factors);
+			} break;
+			case e_ratio: {
+				auto cast = static_cast<const ratio*>(fn);
+				add_factors(cast -> numerator -> clone(), sign, factors);
+				add_factors(cast -> denominator -> clone(), !sign, factors);
+			} break;
+			case e_negative: {
+				auto cast = static_cast<const negative*>(fn);
+				add_factors(new value(-1), sign, factors);
+				add_factors(cast -> operand -> clone(), sign, factors);
+			} break;
+			default:
+				add_factor(fn -> clone(), sign, factors);
+				break;
+		}
+		delete fn;
+	}
+	void get_factors(function const& fn, std::vector<power*> &factors)
+	{
+		add_factors(fn.reduce(), true, factors);
+		auto compare = [] (power *a, power *b) -> bool {
+			auto lbase = a -> base, lexp = a -> exp,
+				 rbase = b -> base, rexp = b -> exp;
 			return *rexp < *lexp || (*lexp == *rexp && *lbase < *rbase);
 		};
 		std::sort(std::begin(factors), std::end(factors), compare);
 		for(auto it = std::begin(factors); it != std::end(factors);) {
-			auto cast = static_cast<const power*>(*it);
-			if(*(cast -> exp) == 0 || *(cast -> base) == 1) {
+			auto reduced = (*it) -> reduce();
+			if(*reduced == 1) {
 				delete *it;
 				it = factors.erase(it);
 			} else {
 				it++;
 			}
+			delete reduced;
 		}
 	}
 	
-	void get_terms(function const& fn, std::vector<function*> &terms)
+	void add_term(function *fn, bool sign, std::vector<product*> &vec)
 	{
-		auto add = [] (function *fn, bool sign, std::vector<function*> &vec) {
-			bool found = false, split = false;
-			function *ll, *lr;
-			if(fn -> get_type() == e_product) {
-				auto cast = static_cast<const product*>(fn);
-				if(cast -> lhs -> constant()) {
-					ll = cast -> lhs -> clone();
-					lr = cast -> rhs -> clone();
-					split = true;
-				} else if(cast -> rhs -> constant()) {
-					ll = cast -> rhs -> clone();
-					lr = cast -> lhs -> clone();
-					split = true;
+		bool found = false, split = false;
+		function *ll, *lr;
+		if(fn -> get_type() == e_product) {
+			auto cast = static_cast<const product*>(fn);
+			function *lhs = cast -> lhs -> reduce(),
+					 *rhs = cast -> rhs -> reduce();
+			if(lhs -> constant()) {
+				auto lval = (*lhs)(0,0,0,0,0,0);
+				if(rhs -> constant()) {
+					lval = (*rhs)(0,0,0,0,0,0) * lval;
+					ll = new value(sign ? lval : -lval);
+					lr = new value(1);
+					delete rhs;
+				} else {
+					ll = new value(sign ? lval : -lval);
+					lr = rhs;
 				}
+				delete lhs;
+				split = true;
+			} else if(rhs -> constant()) {
+				auto rval = (*rhs)(0,0,0,0,0,0);
+				ll = new value(sign ? rval : -rval);
+				lr = lhs;
+				delete rhs;
+				split = true;
+			} else {
+				delete lhs;
+				delete rhs;
 			}
-			if(!split) {
-				ll = new value(1);
-				lr = fn -> clone();
-			}
-			if(!sign) {
-				ll = new negative(ll);
-			}
-			for(auto it = std::begin(vec); it != std::end(vec);) {
-				auto cast = static_cast<const product*>(*it);
-				auto rl = cast -> lhs -> clone(),
-					 rr = cast -> rhs -> clone();
-				if(*lr == *rr) {
-					found = true;
-					delete rr;
-					delete *it;
-					function *lhs = new sum(ll, rl),
-						*lhs_red = lhs -> reduce();
-					delete lhs;
-					*it = new product(lhs_red, lr);
-					break;
-				}
-				delete rl;
+		}
+		if(!split) {
+			ll = new value(sign ? 1 : -1);
+			lr = fn -> clone();
+		}
+		for(auto it = std::begin(vec); it != std::end(vec);) {
+			auto rl = (*it) -> lhs -> clone(),
+				 rr = (*it) -> rhs -> clone();
+			if(*lr == *rr) {
+				found = true;
 				delete rr;
-				it++;
+				delete *it;
+				*it = new product(new sum(ll, rl), lr);
+				break;
 			}
-			if(!found) {
-				vec.emplace_back(new product(ll, lr));
-			}
-		};
-		std::function<void(function*, bool)> process;
-		process = [&] (function *fn, bool sign) {
-			switch(fn -> get_type()) {
-				case e_sum: {
-					auto cast = static_cast<const sum*>(fn);
-					process(cast -> lhs -> clone(), sign);
-					process(cast -> rhs -> clone(), sign);
-				} break;
-				case e_difference: {
-					auto cast = static_cast<const difference*>(fn);
-					process(cast -> lhs -> clone(), sign);
-					process(cast -> rhs -> clone(), !sign);
-				} break;
-				case e_negative: {
-					auto cast = static_cast<const negative*>(fn);
-					process(cast -> operand -> clone(), !sign);
-				} break;
-				default:
-					add(fn, sign, terms);
-					break;
-			}
-			delete fn;
-		};
-		process(fn.clone(), true);
-		auto compare = [] (function *a, function *b) -> bool {
-			auto lcast = static_cast<const product*>(a),
-				 rcast = static_cast<const product*>(b);
-			auto ll = lcast -> lhs, lr = lcast -> rhs,
-				 rl = rcast -> lhs, rr = rcast -> rhs;
-			auto ll_val = (*ll)(0,0,0,0,0,0),
-				 rl_val = (*rl)(0,0,0,0,0,0);
-			bool lpos = ll_val > 0, rpos = rl_val > 0;
-			return (lpos && !rpos) || (lpos && rpos && *lr < *rr);
+			delete rl;
+			delete rr;
+			it++;
+		}
+		if(!found) {
+			vec.emplace_back(new product(ll, lr));
+		}
+		delete fn;
+	}
+	void add_terms(function *fn, bool sign, std::vector<product*> &terms)
+	{
+		switch(fn -> get_type()) {
+			case e_sum: {
+				auto cast = static_cast<const sum*>(fn);
+				add_terms(cast -> lhs -> clone(), sign, terms);
+				add_terms(cast -> rhs -> clone(), sign, terms);
+			} break;
+			case e_difference: {
+				auto cast = static_cast<const difference*>(fn);
+				add_terms(cast -> lhs -> clone(), sign, terms);
+				add_terms(cast -> rhs -> clone(), !sign, terms);
+			} break;
+			case e_negative: {
+				auto cast = static_cast<const negative*>(fn);
+				add_terms(cast -> operand -> clone(), !sign, terms);
+			} break;
+			default:
+				add_term(fn -> clone(), sign, terms);
+				break;
+		}
+		delete fn;
+	}
+	void get_terms(function const& fn, std::vector<product*> &terms)
+	{
+		add_terms(fn.clone(), true, terms);
+		auto compare = [] (product *a, product *b) -> bool {
+			return *a < *b;
 		};
 		std::sort(std::begin(terms), std::end(terms), compare);
 		for(auto it = std::begin(terms); it != std::end(terms);) {
