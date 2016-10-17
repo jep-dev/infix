@@ -61,7 +61,7 @@ namespace Math {
 				lbase = new sine(cast -> operand -> clone());
 				lexp = new value(-1);
 			} break;
-			case e_cotangent: {
+			/*case e_cotangent: {
 				auto cast = static_cast<const cotangent*>(fn);
 				add_factor(new cosine(cast -> operand -> clone()), sign, vec);
 				add_factor(new sine(cast -> operand -> clone()), !sign, vec);
@@ -74,7 +74,7 @@ namespace Math {
 				add_factor(new cosine(cast -> operand -> clone()), !sign, vec);
 				delete fn;
 				return;
-			} break;
+			} break;*/
 			default: {
 				lbase = fn -> clone();
 				lexp = new value(1);
@@ -90,10 +90,6 @@ namespace Math {
 				found = true;
 				function *exp = new sum(lexp, rexp -> clone());
 				delete *it;
-				/*
- 				*it = new power(lbase, exp -> reduce());
-				delete exp;
-				*/
 				*it = new power(lbase, exp);
 				break;
 			}
