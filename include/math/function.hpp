@@ -6,8 +6,6 @@
 namespace Math {
 
 	struct function {
-		static int num_operands(function const&);
-
 		virtual e_type get_type(void) const = 0;
 		virtual e_order get_order(void) const = 0;
 		//virtual int get_operands(void) const;
@@ -29,6 +27,8 @@ namespace Math {
 			(std::ostream &os, function const& fn);
 		function(void);
 		virtual ~function(void);
+
+		static function* reduce(function const&);
 	};
 
 }

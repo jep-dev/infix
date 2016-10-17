@@ -2,29 +2,6 @@
 #include <iostream>
 
 namespace Math {
-	int function::num_operands(function const& fn)
-	{
-		if(fn.get_order() == e_order_term) {
-			auto type = fn.get_type();
-			if(type == e_value || type == e_variable) {
-				return 0;
-			}
-			return 1;
-		}
-		return 2;
-	}
-	/*int function::get_operands(void) const
-	{
-		if(get_order() == e_order_term) {
-			auto type = get_type();
-			if(type == e_value || type == e_variable) {
-				return 0;
-			}
-			return 1;
-		} else {
-			return 2;
-		}
-	}*/
 	bool function::operator!=(function const& f) const
 	{
 		return !(*this == f);
@@ -57,8 +34,47 @@ namespace Math {
 	function::function(void) {}
 	function::~function(void) {}
 
+	function* function::reduce(function const& fn)
+	{
+		function *total = nullptr;
+		std::vector<product*> terms;
+		get_terms(fn, terms);
+		for(auto term : terms) {
+			function *reduced = term -> reduce();
+			std::vector<power*> factors;
+			get_factors(*reduced, factors);
+			delete reduced;
+			delete term;
+
+			function *factored = nullptr;
+			//for(auto factor : factors) {
+			for(auto it = std::begin(factors); it != std::end(factors);) {
+				auto factor = *it;
+				if(factored)
+					factored = new product(factored, factor -> reduce());
+				else
+					factored = factor -> reduce();
+				delete *it;
+				it = factors.erase(it);
+				/*if(factored) factored = new product(factored, factor);
+				else factored = factor;*/
+			}
+			if(!factored) {
+				factored = new value(1);
+			}
+			total = total ? new sum(total, factored) : factored;
+		}
+		return total ? total : new value(0);
+		//return fn.reduce();
+	}
+
 	std::ostream& operator<<(std::ostream &os, function const& fn)
 	{
-		return fn.print(os);
+		//auto reduced = function::reduce(fn);
+		auto reduced = fn.reduce();
+		reduced -> print(os);
+		delete reduced;
+		return os;
+		//return fn.print(os);
 	}
 }
