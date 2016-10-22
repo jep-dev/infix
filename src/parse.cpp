@@ -347,23 +347,6 @@ std::string preparse(std::string const& src)
 		unclosed.pop_back();
 	}
 	return dest;
-	/*std::string dest;
-	char prev = ')';
-	for(auto cur : src) {
-		if(cur == '-') {
-			switch(prev) {
-				case '+': case '/': case '*':
-				case '^': case '(': case ')':
-					break;
-				default:
-					dest += '+';
-					break;
-			}
-		}
-		dest += cur;
-		prev = cur;
-	}
-	return dest;*/
 }
 
 Math::function* parse_function(std::string const& src)
