@@ -59,9 +59,6 @@ namespace Math {
 	struct product;
 	struct power;
 
-	void get_factors(function const&, std::vector<power*>&);
-	void get_terms(function const&, std::vector<product*>&);
-
 }
 
 #include "math/function.hpp"

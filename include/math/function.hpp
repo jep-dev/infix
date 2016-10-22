@@ -29,8 +29,20 @@ namespace Math {
 		virtual ~function(void);
 
 		static function* reduce(function const&);
+		static function* reduce2(function const&);
 	};
 
+	std::vector<product*> shared_terms(std::vector<product*> const&,
+			std::vector<product*> const&);
+	function* factorize(function const&);
+	function* get_product(std::vector<power*>&, bool collect = true);
+	function* get_sum(std::vector<product*>&, bool collect = true);
+	void add_factor(function *fn, bool, std::vector<power*>&);
+	void add_factors(function*, bool, std::vector<power*>&);
+	std::vector<power*> get_factors(function const&);
+	std::vector<product*> get_terms(function const&);
+
+	template<typename T> void erase_all(std::vector<T*> &vec);
 }
 
 #endif
