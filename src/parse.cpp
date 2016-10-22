@@ -186,16 +186,11 @@ expr* parse_expr(std::string const& src)
 		int len = src.length(), depth = 0;
 		bool found = false, found_early = false;
 		for(int i = 0; i < len; i++) {
-			if(src[i] == '(') {
-				depth++;
-			} else if(src[i] == ')') {
-				depth--;
-			}
+			if(src[i] == '(') depth++;
+			else if(src[i] == ')') depth--;
 			if(depth == 0) {
 				found = true;
-				if(i < len - 1) {
-					found_early = true;
-				}
+				if(i < len - 1) found_early = true;
 				break;
 			}
 		}
@@ -206,30 +201,20 @@ expr* parse_expr(std::string const& src)
 	}
 	if(parse_binary(src, c_op, lhs, rhs)) {
 		auto lparse = parse_expr(lhs), rparse = parse_expr(rhs);
-		if(lparse && rparse) {
+		if(lparse && rparse)
 			return new binary_expr(c_op, lparse, rparse);
-		}
-		if(lparse) {
-			delete lparse;
-		}
-		if(rparse) {
-			delete rparse;
-		}
+		if(lparse) delete lparse;
+		if(rparse) delete rparse;
 	} else if(parse_negative(src, lhs)) {
 		auto lparse = parse_expr(lhs);
-		if(lparse) {
-			return new negative_expr(lparse);
-		}
+		if(lparse) return new negative_expr(lparse);
 	} else if(parse_unary(src, s_op, lhs)) {
 		auto lparse = parse_expr(lhs);
-		if(lparse) {
-			return new unary_expr(s_op, lparse);
-		}
-	} else if(parse_symbol(src, sym)) {
+		if(lparse) return new unary_expr(s_op, lparse);
+	} else if(parse_symbol(src, sym))
 		return new symbol_expr(sym);
-	} else if(parse_constant(src, val) || parse_alias(src, val)) {
+	else if(parse_constant(src, val) || parse_alias(src, val))
 		return new constant_expr(val);
-	}
 	return nullptr;
 }
 
@@ -237,26 +222,13 @@ bool get_param(char c, Math::e_param &p)
 {
 	using namespace Math;
 	switch(c) {
-		case 'r':
-			p = e_param_r;
-			break;
-		case 's':
-			p = e_param_s;
-			break;
-		case 't':
-			p = e_param_t;
-			break;
-		case 'u':
-			p = e_param_u;
-			break;
-		case 'v':
-			p = e_param_v;
-			break;
-		case 'w':
-			p = e_param_w;
-			break;
-		default:
-			return false;
+		case 'r': p = e_param_r; break;
+		case 's': p = e_param_s; break;
+		case 't': p = e_param_t; break;
+		case 'u': p = e_param_u; break;
+		case 'v': p = e_param_v; break;
+		case 'w': p = e_param_w; break;
+		default: return false;
 	}
 	return true;
 }
@@ -272,50 +244,31 @@ Math::function* get_function(expr *e)
 		case e_symbol_expr: {
 			auto cast = static_cast<const symbol_expr*>(e);
 			e_param param;
-			if(get_param(cast -> sym, param)) {
-				return new variable(param);
-			}
-			return nullptr;
+			return get_param(cast -> sym, param)
+				? new variable(param) : nullptr;
 		} break;
 		case e_negative_expr: {
 			auto cast = static_cast<const negative_expr*>(e);
 			auto operand = get_function(cast -> operand);
-			if(!operand) {
-				return nullptr;
-			}
-			return new negative(operand);
+			return operand ? new negative(operand) : nullptr;
 		} break;
 		case e_unary_expr: {
 			auto cast = static_cast<const unary_expr*>(e);
 			auto op = cast -> op;
 			auto operand = get_function(cast -> operand);
-			if(!operand) {
-				return nullptr;
-			}
-			if(op == "acos") {
-				return new arccosine(operand);
-			} else if(op == "asin") {
-				return new arcsine(operand);
-			} else if(op == "atan") {
-				return new arctangent(operand);
-			} else if(op == "sec") {
-				return new secant(operand);
-			} else if(op == "csc") {
-				return new cosecant(operand);
-			} else if(op == "cot") {
-				return new cotangent(operand);
-			} else if(op == "cos") {
-				return new cosine(operand);
-			} else if(op == "sin") {
-				return new sine(operand);
-			} else if(op == "tan") {
-				return new tangent(operand);
-			} else if(op == "log") {
-				return new logarithm(operand);
-			} else {
-				delete operand;
-				return nullptr;
-			}
+			if(!operand) return nullptr;
+			if(op == "acos") return new arccosine(operand);
+			else if(op == "asin") return new arcsine(operand);
+			else if(op == "atan") return new arctangent(operand);
+			else if(op == "sec") return new secant(operand);
+			else if(op == "csc") return new cosecant(operand);
+			else if(op == "cot") return new cotangent(operand);
+			else if(op == "cos") return new cosine(operand);
+			else if(op == "sin") return new sine(operand);
+			else if(op == "tan") return new tangent(operand);
+			else if(op == "log") return new logarithm(operand);
+			delete operand;
+			return nullptr;
 		} break;
 		case e_binary_expr: {
 			auto cast = static_cast<const binary_expr*>(e);
@@ -324,26 +277,19 @@ Math::function* get_function(expr *e)
 			auto rhs = get_function(cast -> rhs);
 			if(lhs && rhs) {
 				switch(op) {
-					case '-':
-						return new difference(lhs, rhs);
-					case '+':
-						return new sum(lhs, rhs);
-					case '*':
-						return new product(lhs, rhs);
-					case '/':
-						return new ratio(lhs, rhs);
-					case '^':
-						return new power(lhs, rhs);
+					case '-': return new difference(lhs, rhs);
+					case '+': return new sum(lhs, rhs);
+					case '*': return new product(lhs, rhs);
+					case '/': return new ratio(lhs, rhs);
+					case '^': return new power(lhs, rhs);
 					default:
 						delete lhs;
 						delete rhs;
 						return nullptr;
 				}
-			} else if(lhs) {
-				delete lhs;
-			} else if(rhs) {
-				delete rhs;
 			}
+			if(lhs) delete lhs;
+			if(rhs) delete rhs;
 			return nullptr;
 		} break;
 		default:
@@ -354,13 +300,60 @@ Math::function* get_function(expr *e)
 std::string preparse(std::string const& src)
 {
 	std::string dest;
+	std::vector<int> unclosed;
+	int src_level = 0, dest_level = 0;
+	char prev = ')';
+	for(auto it = std::begin(src); it != std::end(src); it++) {
+		char cur = *it;
+		if(cur == '(') {
+			src_level++;
+			dest += cur;
+		} else if(cur == ')') {
+			src_level--;
+			dest += cur;
+		} else if(cur == '-') {
+			switch(prev) {
+				case '+': case '*': case '/':
+				case '^': //case '(': case ')':
+					break;
+				default:
+					dest += '+';
+					break;
+			}
+			dest += "-(";
+			unclosed.emplace_back(src_level);
+			dest_level++;
+		} else {
+			dest += cur;
+		}
+		while(unclosed.size()) {
+			auto last = unclosed.back();
+			if(src_level <= last) {
+				if(cur == '+' || cur == ')') {
+					dest_level--;
+					dest += ')';
+					unclosed.pop_back();
+				} else {
+					break;
+				}
+			} else {
+				break;
+			}
+		}
+		prev = cur;
+	}
+	while(unclosed.size()) {
+		dest += ')';
+		unclosed.pop_back();
+	}
+	return dest;
+	/*std::string dest;
 	char prev = ')';
 	for(auto cur : src) {
 		if(cur == '-') {
 			switch(prev) {
-				case '+': case '/':
-				case '*': case '^':
-				case '(': case ')':
+				case '+': case '/': case '*':
+				case '^': case '(': case ')':
 					break;
 				default:
 					dest += '+';
@@ -370,7 +363,7 @@ std::string preparse(std::string const& src)
 		dest += cur;
 		prev = cur;
 	}
-	return dest;
+	return dest;*/
 }
 
 Math::function* parse_function(std::string const& src)
