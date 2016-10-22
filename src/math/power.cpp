@@ -121,7 +121,8 @@ namespace Math {
 	}
 	std::ostream& power::print(std::ostream &os) const
 	{
-		if((base -> get_order()) > e_order_term) {
+		if((base -> get_order()) > e_order_term
+				|| base -> get_type() == e_negative) {
 			os << "(" << *base << ")";
 		} else {
 			os << *base;
