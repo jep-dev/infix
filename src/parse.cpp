@@ -299,22 +299,41 @@ Math::function* get_function(expr *e)
 
 std::string preparse(std::string const& src)
 {
+	auto autoclose = [] (std::vector<int> &unclosed,
+			std::string &dest, int &level) {
+		while(unclosed.size()) {
+			auto last = unclosed.back();
+			if(level <= last) {
+				dest += ')';
+				unclosed.pop_back();
+			} else {
+				break;
+			}
+		}
+	};
 	std::string dest;
 	std::vector<int> unclosed;
 	int src_level = 0, dest_level = 0;
 	char prev = ')';
 	for(auto it = std::begin(src); it != std::end(src); it++) {
 		char cur = *it;
+		bool added = false;
 		if(cur == '(') {
 			src_level++;
 			dest += cur;
+			added = true;
 		} else if(cur == ')') {
 			src_level--;
 			dest += cur;
-		} else if(cur == '-') {
+			added = true;
+		}
+		if(cur == ')' || cur == '+' || cur == '-') {
+			autoclose(unclosed, dest, src_level);
+		}
+		if(cur == '-') {
 			switch(prev) {
-				case '+': case '*': case '/':
-				case '^': //case '(': case ')':
+				case '+': case '*':
+				case '/': case '^':
 					break;
 				default:
 					dest += '+';
@@ -322,30 +341,14 @@ std::string preparse(std::string const& src)
 			}
 			dest += "-(";
 			unclosed.emplace_back(src_level);
-			dest_level++;
-		} else {
-			dest += cur;
+			added = true;
 		}
-		while(unclosed.size()) {
-			auto last = unclosed.back();
-			if(src_level <= last) {
-				if(cur == '+' || cur == ')') {
-					dest_level--;
-					dest += ')';
-					unclosed.pop_back();
-				} else {
-					break;
-				}
-			} else {
-				break;
-			}
+		if(!added) {
+			dest += cur;
 		}
 		prev = cur;
 	}
-	while(unclosed.size()) {
-		dest += ')';
-		unclosed.pop_back();
-	}
+	autoclose(unclosed, dest, src_level);
 	return dest;
 }
 
