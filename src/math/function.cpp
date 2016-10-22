@@ -1,6 +1,7 @@
 #include "math.hpp"
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 
 namespace Math {
 	bool function::operator!=(function const& f) const
@@ -87,16 +88,20 @@ namespace Math {
 
 	std::ostream& operator<<(std::ostream &os, function const& fn)
 	{
-		auto reduced = function::reduce(fn);
-		reduced -> print(os);
+		auto reduced = function::reduce2(fn);
+		std::ostringstream oss;
+		reduced -> print(oss);
+		std::string output = oss.str();
+		for(auto cur = output.begin(), end = output.end(); cur != end;) {
+			auto prev = cur++;
+			if(cur == end || *prev != '+' || *cur != '-') {
+				os << *prev;
+			}
+		}
 		delete reduced;
-		/*auto factorized = factorize(fn);
-		factorized -> print(os);
-		delete factorized;*/
 		return os;
 	}
 
-	
 	std::vector<product*> shared_terms(std::vector<product*> const& a,
 			std::vector<product*> const& b)
 	{
