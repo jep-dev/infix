@@ -105,9 +105,73 @@ void usage(void)
 		"  <expression(r,s,t,u,v,w,e,pi)>\n";
 }
 
+std::ostream& print_factors(std::vector<Math::power*> const& vec,
+		std::ostream &os)
+{
+	int count = 0;
+	for(auto v : vec)
+		os << (count++ ? ", " : "") << *v;
+	return os;
+}
+std::ostream& print_factors2(std::vector<Math::power*> const& vec,
+		std::ostream &os)
+{
+	int count = 0;
+	for(auto v : vec)
+		os << (count++ ? ", " : "") << '{'
+			<< *(v -> base) << ',' << *(v -> exp) << '}';
+	return os;
+}
+
+std::ostream& print_terms(std::vector<Math::product*> const& vec,
+		std::ostream &os)
+{
+	int count = 0;
+	for(auto v : vec)
+		os << (count++ ? ", " : "") << *v;
+	return os;
+}
+std::ostream& print_terms(std::vector<Math::function*> const& vec,
+		std::ostream &os)
+{
+	int count = 0;
+	for(auto v : vec)
+		os << (count++ ? ", " : "") << *v;
+	return os;
+}
+
+/*std::ostream& print_terms2(std::vector<Math::product*> const& vec,
+		std::ostream &os)
+{
+	int count = 0;
+	for(auto v : vec)
+		os << (count++ ? ", " : "") << *(v -> lhs) << "*" << *(v -> rhs);
+	return os;
+}*/
+
+std::ostream& align_str(int width, std::string const& src,
+		std::ostream &dest, char fill = ' ', unsigned int alignment = 0)
+{
+	dest << std::setfill(fill) << std::setw(width);
+	switch(alignment) {
+		case 0: dest << std::left; break;
+		case 1: dest << std::internal; break;
+		default: dest << std::right; break;
+	}
+	return dest << src;
+}
+std::ostream& align_fn(int width, Math::function const& fn,
+		std::ostream &dest, char fill = ' ', unsigned int alignment = 0)
+{
+	std::ostringstream oss;
+	oss << fn;
+	return align_str(width, oss.str(), dest, fill, alignment);
+}
+
 int main(int argc, const char *argv[])
 {
 	using namespace Math;
+
 	std::string line;
 	std::vector<std::pair<e_param, function*>> bindings;
 	std::cout << "# ";
@@ -131,19 +195,27 @@ int main(int argc, const char *argv[])
 		} else if(parse_bind(line, param, binding)) {
 			bindings.emplace_back(param, binding);
 		} else if(auto parsed = parse_function(line)) {
+			// Reduce before bindings
 			function *reduced = function::reduce(*parsed);
 			delete parsed;
 			parsed = reduced;
+			// Apply bindings
 			for(auto binding : bindings) {
 				auto bound = parsed ->
 					substitute(binding.first, binding.second);
 				delete parsed;
 				parsed = bound;
 			}
+			// Reduce after bindings
 			reduced = function::reduce(*parsed);
 			delete parsed;
 			parsed = reduced;
+
+			// Print result + derivatives
 			print(*parsed, std::cout);
+			
+			// Print derivatives
+			std::cout << "  Derivatives:" << std::endl;
 			print_derivatives(*parsed, std::cout, "  ");
 			delete parsed;
 		} else {
@@ -152,4 +224,5 @@ int main(int argc, const char *argv[])
 		std::cout << "# ";
 	}
 	clear(bindings);
+	
 }
