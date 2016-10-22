@@ -15,6 +15,8 @@ std::ostream& print_derivative(Math::function const&, Math::e_param,
 std::ostream& print_derivatives(Math::function const&,
 		std::ostream&, std::string = "");
 
+void print_columns(std::string, std::string, std::ostream&,
+		int = 20, int = 20, std::string = " | ");
 void columnate(std::string, std::ostream&, int = 40);
 
 #endif
